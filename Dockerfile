@@ -34,12 +34,16 @@ RUN ./build.sh
 # Stage 2: Runtime
 FROM ubuntu:22.04
 
+# Set environment variables to prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     libssl3 \
     libsamplerate0 \
     libpcap0.8 \
     libslirp0 \
+    xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,8 +53,8 @@ COPY --from=builder /xemu/dist/xemu /usr/local/bin/xemu
 # Set the working directory
 WORKDIR /usr/local/bin
 
-# Expose a port if needed (e.g., if xemu uses network features)
-EXPOSE 8080
+# Expose ports if necessary
+# EXPOSE 5900  # Uncomment if using VNC or any other network services
 
-# Start xemu in headless mode
-CMD ["xemu", "--headless"]
+# Run xemu in headless mode using Xvfb
+CMD ["sh", "-c", "xvfb-run --server-args='-screen 0 1024x768x24' xemu --headless"]
