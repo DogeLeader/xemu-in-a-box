@@ -17,15 +17,10 @@ RUN apt-get update && apt-get install -y \
     ninja-build \
     python3-yaml \
     libslirp-dev \
-    clang \
-    llvm \
     libgbm-dev \
     libdrm-dev \
-    libxkbcommon-dev \
-    libwayland-dev \
-    libinput-dev \
-    libudev-dev \
-    libvulkan-dev \
+    llvm \
+    clang \
     pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -33,26 +28,25 @@ RUN apt-get update && apt-get install -y \
 # Clone the xemu repository
 RUN git clone https://github.com/mborgerson/xemu.git /xemu
 
-# Disable X11 and Wayland in the xemu build
+# Build xemu without any X11 or Wayland dependencies
 WORKDIR /xemu
-RUN sed -i 's/find_package(X11 REQUIRED)/#find_package(X11 REQUIRED)/' CMakeLists.txt
-RUN sed -i 's/find_package(Wayland REQUIRED)/#find_package(Wayland REQUIRED)/' CMakeLists.txt
-RUN sed -i 's/add_definitions(-DX11_SUPPORT)/#add_definitions(-DX11_SUPPORT)/' CMakeLists.txt
-
-# Build xemu
-RUN ./build.sh
+RUN mkdir build
+WORKDIR /xemu/build
+RUN cmake -G Ninja .. \
+    -DENABLE_OPENGL=OFF \
+    -DENABLE_VULKAN=OFF \
+    -DENABLE_SDL2=ON \
+    -DENABLE_HEADLESS=ON
+RUN ninja
 
 # Create a directory for xemu config and games
 RUN mkdir -p /root/.local/share/xemu
 
-# Create a directory for headless operations
-RUN mkdir -p /xemu/headless
+# Set up a directory for headless operations
+WORKDIR /xemu
 
-# Move the built binary to the headless directory
-RUN cp ./dist/xemu /xemu/headless
+# Copy the built binary to the root directory
+RUN cp ./build/xemu /usr/local/bin/xemu
 
-# Set the working directory to headless
-WORKDIR /xemu/headless
-
-# Entry point for running xemu in headless mode without X11
-CMD ["./xemu", "--no-gui", "--headless"]
+# Entry point for running xemu in headless mode
+CMD ["xemu", "--no-gui", "--headless"]
