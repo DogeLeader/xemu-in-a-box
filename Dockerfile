@@ -28,18 +28,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone the xemu repository
-RUN git clone https://github.com/mborgerson/xemu.git /xemu
+RUN git clone --recursive https://github.com/mborgerson/xemu.git /xemu
 
-# Build xemu without any X11 or Wayland dependencies
+# Change working directory to /xemu
 WORKDIR /xemu
-RUN mkdir build
-WORKDIR /xemu/build
-RUN cmake -G Ninja .. \
-    -DENABLE_OPENGL=OFF \
-    -DENABLE_VULKAN=OFF \
-    -DENABLE_SDL2=ON \
-    -DENABLE_HEADLESS=ON
-RUN ninja
+
+# Use the build script to build xemu
+RUN ./build.sh
 
 # Create a directory for xemu config, games, and other files
 RUN mkdir -p /root/.local/share/xemu
@@ -48,13 +43,13 @@ RUN mkdir -p /root/.local/share/xemu
 RUN mkdir -p /xemu-files
 
 # Use wget to download the setup ZIP file
-RUN wget -O /xemu-files/setup-files.zip "https://archive.org/download/xemu-files/XEMU_FILES.zip"
-# Unzip the setup files into the xemu-files directory
+RUN wget -O /xemu-files/setup-files.zip "https://example.com/path/to/your/setup-files.zip"
 
+# Unzip the setup files into the xemu-files directory
 RUN unzip /xemu-files/setup-files.zip -d /xemu-files
 
 # Copy the built binary to the headless directory
-RUN cp ./xemu /usr/local/bin/xemu
+RUN cp ./build/xemu /usr/local/bin/xemu
 
 # Entry point for running xemu in headless mode
 CMD ["xemu", "--no-gui", "--headless"]
