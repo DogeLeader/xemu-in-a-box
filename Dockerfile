@@ -39,5 +39,4 @@ RUN ./build.sh
 # Set the entry point for the container
 ENTRYPOINT ["./dist/xemu"]
 
-# Expose any necessary ports (if applicable)
-# EXPOSE 8080
+EXPOSE 8080
