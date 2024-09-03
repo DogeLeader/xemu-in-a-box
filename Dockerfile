@@ -1,60 +1,43 @@
-# Stage 1: Build
-FROM ubuntu:22.04 AS builder
-
-# Set environment variables to prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    build-essential \
-    libsdl2-dev \
-    libepoxy-dev \
-    libpixman-1-dev \
-    libgtk-3-dev \
-    libssl-dev \
-    libsamplerate0-dev \
-    libpcap-dev \
-    ninja-build \
-    python3-yaml \
-    libslirp-dev \
-    wget \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Clone the xemu repository from GitHub
-RUN git clone https://github.com/mborgerson/xemu.git /xemu
-
-# Set the working directory to the xemu directory
-WORKDIR /xemu
-
-# Build xemu using the provided build script
-RUN ./build.sh
-
-# Stage 2: Runtime
+# Use the official Ubuntu 22.04 base image
 FROM ubuntu:22.04
 
-# Set environment variables to prevent interactive prompts during package installation
+# Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libssl3 \
-    libsamplerate0 \
-    libpcap0.8 \
-    libslirp0 \
-    xvfb \
-    && apt-get clean \
+# Install necessary packages
+RUN apt-get update && \
+    apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libgtk-3-dev \
+    libglib2.0-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libx11-dev \
+    libxext-dev \
+    libxi-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxss-dev \
+    libpulse-dev \
+    libasound2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy xemu binaries from the build stage
-COPY --from=builder /xemu/dist/xemu /usr/local/bin/xemu
+# Clone the Xemu repository
+RUN git clone --recurse-submodules https://github.com/xemu-project/xemu.git /xemu
 
 # Set the working directory
-WORKDIR /usr/local/bin
+WORKDIR /xemu
 
-# Expose ports if necessary
-# EXPOSE 5900  # Uncomment if using VNC or any other network services
+# Build Xemu
+RUN ./build.sh
 
-# Run xemu in headless mode using Xvfb
-CMD ["sh", "-c", "xvfb-run --server-args='-screen 0 1024x768x24' xemu --headless"]
+# Set the entry point for the container
+ENTRYPOINT ["./dist/xemu"]
+
+# Expose any necessary ports (if applicable)
+# EXPOSE 8080
