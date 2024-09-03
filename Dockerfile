@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
     libdrm-dev \
     llvm \
     clang \
+    unzip \
+    wget \
     pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -39,14 +41,20 @@ RUN cmake -G Ninja .. \
     -DENABLE_HEADLESS=ON
 RUN ninja
 
-# Create a directory for xemu config and games
+# Create a directory for xemu config, games, and other files
 RUN mkdir -p /root/.local/share/xemu
 
-# Set up a directory for headless operations
-WORKDIR /xemu
+# Create a directory for the downloaded files
+RUN mkdir -p /xemu-files
 
-# Copy the built binary to the root directory
-RUN cp ./build/xemu /usr/local/bin/xemu
+# Use wget to download the setup ZIP file
+RUN wget -O /xemu-files/setup-files.zip "https://archive.org/download/xemu-files/XEMU_FILES.zip"
+# Unzip the setup files into the xemu-files directory
+
+RUN unzip /xemu-files/setup-files.zip -d /xemu-files
+
+# Copy the built binary to the headless directory
+RUN cp ./xemu /usr/local/bin/xemu
 
 # Entry point for running xemu in headless mode
 CMD ["xemu", "--no-gui", "--headless"]
