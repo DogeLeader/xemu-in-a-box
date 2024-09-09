@@ -85,5 +85,4 @@ RUN mkdir -p /xemu-files
 RUN cp ./build/xemu /usr/local/bin/xemu
 
 # Entry point for running xemu in headless mode
-CMD ["xemu", "--no-gui", "--headless"]
-
+CMD ["bash", "-c", "ttyd -p 10000 bash -c 'xemu --no-gui --headless'"]
