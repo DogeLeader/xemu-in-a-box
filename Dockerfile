@@ -82,7 +82,7 @@ RUN mkdir -p /root/.local/share/xemu
 RUN mkdir -p /xemu-files
 
 # Copy the built binary to the headless directory
-RUN cp ./build/xemu /usr/local/bin/xemu
+RUN cp -r ./dist/xemu /usr/local/bin/xemu
 
 # Entry point for running xemu in headless mode
-CMD ["bash", "-c", "ttyd -p 10000 bash -c 'xemu --no-gui --headless'"]
+CMD ["bash", "-c", "ttyd -p 10000 bash -c './dist/xemu --no-gui --headless'"]
