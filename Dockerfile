@@ -33,35 +33,18 @@ RUN apt-get update && apt-get install -y \
     libuv1-dev \
     libjson-c-dev \
     libwebsockets-dev \
-    sudo \
-    curl \
-    net-tools \
-    vim \
-    openssh-client \
-    locales \
-    bash-completion \
-    iputils-ping \
-    htop \
-    libgtk-3-dev \
-    gnupg2 \
-    tmux \
-    screen \
-    zsh \
+    x11vnc \
     xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Add a password for VNC
+RUN mkdir /root/.vnc && \
+    echo "my_password" | vncpasswd -f > /root/.vnc/passwd && \
+    chmod 600 /root/.vnc/passwd
+
 # Set environment variable for terminal type
 ENV TERM=xterm-256color
-
-# Clone and build ttyd
-RUN git clone --branch 1.6.3 https://github.com/tsl0922/ttyd.git /ttyd-src && \
-    cd /ttyd-src && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make && \
-    make install
 
 # Clone the xemu repository
 RUN git clone --recursive https://github.com/mborgerson/xemu.git /xemu
@@ -72,12 +55,11 @@ WORKDIR /xemu
 # Use the build script to build xemu
 RUN ./build.sh
 
-# Create a directory for xemu config, games, and other files
+# Create a directory for xemu config
 RUN mkdir -p /root/.local/share/xemu
 
-# Expose the desired port
-EXPOSE 10000
+# Expose the VNC port (5900 by default)
+EXPOSE 5900
 
-# Entry point for running xemu in headless mode using Xvfb
-# Check the actual location of the built xemu binary in the directory structure
-CMD ["bash", "-c", "Xvfb :1 -screen 0 1024x768x16 & ttyd -p 10000 bash -c 'DISPLAY=:1 ./xemu/dist/xemu'"]
+# Command to run Xvfb, x11vnc, and xemu
+CMD ["bash", "-c", "Xvfb :1 -screen 0 1024x768x16 & DISPLAY=:1 ./dist/xemu & x11vnc -display :1 -usepw -forever -noxdamage -repeat -bg -rfbport 5900"]
