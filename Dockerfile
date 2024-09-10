@@ -24,13 +24,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     wget \
     pkg-config \
-    apt-get update && apt-get install -y \
-    git \
     npm \
     nodejs \
-    build-essential \
     cmake \
-    clang \
     gcc \
     g++ \
     zlib1g-dev \
@@ -39,7 +35,6 @@ RUN apt-get update && apt-get install -y \
     libwebsockets-dev \
     sudo \
     curl \
-    wget \
     net-tools \
     vim \
     openssh-client \
@@ -47,17 +42,19 @@ RUN apt-get update && apt-get install -y \
     bash-completion \
     iputils-ping \
     htop \
+    libgtk-3-dev \
     gnupg2 \
     tmux \
     screen \
     zsh \
+    xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variable for terminal type
 ENV TERM=xterm-256color
 
-# Download and install ttyd from a specific version for compatibility
+# Clone and build ttyd
 RUN git clone --branch 1.6.3 https://github.com/tsl0922/ttyd.git /ttyd-src && \
     cd /ttyd-src && \
     mkdir build && \
@@ -65,7 +62,7 @@ RUN git clone --branch 1.6.3 https://github.com/tsl0922/ttyd.git /ttyd-src && \
     cmake .. && \
     make && \
     make install
-    
+
 # Clone the xemu repository
 RUN git clone --recursive https://github.com/mborgerson/xemu.git /xemu
 
@@ -78,13 +75,9 @@ RUN ./build.sh
 # Create a directory for xemu config, games, and other files
 RUN mkdir -p /root/.local/share/xemu
 
-# Create a directory for the downloaded files
-RUN mkdir -p /xemu-files
+# Expose the desired port
+EXPOSE 10000
 
-# Copy the built binary to the headless directory
-RUN cp -r ./dist/xemu /usr/local/bin/xemu
-
-EXPOSE 7681
-
-# Entry point for running xemu in headless mode
-CMD ["bash", "-c", "ttyd -p 7681 bash -c 'xemu --no-gui --headless'"]
+# Entry point for running xemu in headless mode using Xvfb
+# Check the actual location of the built xemu binary in the directory structure
+CMD ["bash", "-c", "Xvfb :1 -screen 0 1024x768x16 & ttyd -p 10000 bash -c 'DISPLAY=:1 ./xemu/dist/xemu'"]
