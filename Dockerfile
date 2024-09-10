@@ -35,13 +35,13 @@ RUN apt-get update && apt-get install -y \
     libwebsockets-dev \
     x11vnc \
     xvfb \
+    libgtk-3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Add a password for VNC
+# Create a VNC password
 RUN mkdir /root/.vnc && \
-    echo "my_password" | vncpasswd -f > /root/.vnc/passwd && \
-    chmod 600 /root/.vnc/passwd
+    x11vnc -storepasswd admin-doge /root/.vnc/passwd
 
 # Set environment variable for terminal type
 ENV TERM=xterm-256color
@@ -62,4 +62,4 @@ RUN mkdir -p /root/.local/share/xemu
 EXPOSE 5900
 
 # Command to run Xvfb, x11vnc, and xemu
-CMD ["bash", "-c", "Xvfb :1 -screen 0 1024x768x16 & DISPLAY=:1 ./dist/xemu & x11vnc -display :1 -usepw -forever -noxdamage -repeat -bg -rfbport 5900"]
+CMD ["bash", "-c", "Xvfb :1 -screen 0 1024x768x16 & DISPLAY=:1 ./xemu/dist/xemu & x11vnc -display :1 -usepw -forever -noxdamage -repeat -bg -rfbport 5900"]
